@@ -1,0 +1,17 @@
+<Number> = 0 | 1 | 2 | ... | 9
+
+<Decimal> = 0 | ((1 | 2 | ... | 9) <Number>*)
+
+<AddExpression> = <MultiplicativeExpression> | 
+    (<AddExpression> "+" <MultiplicativeExpression>) |
+    (<AddExpression> "-" <MultiplicativeExpression>) 
+
+<MultiplicativeExpression> = <Decimal> | 
+    (<MultiplicativeExpression> "*" <Decimal>) |
+    (<MultiplicativeExpression> "/" <Decimal>) 
+
+1 + 2*3
+
+<LogicalExpression> = <AddExpression> | (<MultiplicativeExpression> "*" <Decimal>) 
+
+
