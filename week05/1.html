@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            var queue = [
+                'Infinity',
+                'NaN',
+                'eval',
+                'isFinite',
+                'isNaN',
+                'parseFloat',
+                'parseInt',
+                'encodeURI',
+                'encodeURIComponent',
+                'decodeURI',
+                'decodeURIComponent',
+                'URIError',
+                'Array',
+                'ArrayBuffer',
+                'Boolean',
+                'DataView',
+                'Date',
+                'Error',
+                'EvalError',
+                'Float32Array',
+                'Float64Array',
+                
+            ].map(name=>({
+                object:window[name],
+                name: name
+            }))
+            let current,
+                allObject = new Set()
+            while (queue.length) {
+                current = queue.shift()
+                if (allObject.has(current)) continue
+                allObject.add(current)
+                for (let key of Object.keys(current)) {
+                    if (current[key] instanceof Object) {
+                        queue.push(current[p])
+                    }
+                }
+            }
+            console.log(allObject)
+        </script>
+    </body>
+</html>
