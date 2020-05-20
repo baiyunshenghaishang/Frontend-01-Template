@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    function match(pattern, str) {
+        let functions = []
+
+        for (let i = 0; i < pattern.length; i++) {
+          let func = createFunc()
+          functions.push(func)
+        }
+
+        let state = functions[0]
+        for (let i = 0; i < str.length; i++) {
+          state = state(
+            i,
+            pattern,
+            functions.findIndex(func => func === state),
+            functions,
+            str
+          )
+          if (state === end) break
+        }
+
+        return state === end
+      }
+
+      function createFunc() {
+        let functionBody = `
+          if(str[strIndex]===pattern[index]){
+            if(index===pattern.length-1){
+              return end
+            }else{
+              return functions[index+1]
+            }
+          }
+          let len =0
+          if(index>1){
+           len = getMatchedLength(pattern.slice(0,index-1),str.slice(0,strIndex))
+          }
+          if(!len&&!index)return functions[0]
+          return functions[len](strIndex,pattern,len,functions,str)
+        `
+        return new Function(
+          "strIndex",
+          "pattern",
+          "index",
+          "functions",
+          "str",
+          functionBody
+        )
+      }
+
+      function end() {
+        return end
+      }
+
+      function getMatchedLength(pattern, str) {
+        let i = pattern.length
+        for (; i >= 1; i--) {
+          if (isMatched(pattern.slice(0, i), str)) return i
+        }
+        return i
+      }
+
+      function isMatched(pattern, str) {
+        if (pattern.length > str.length) {
+          return false
+        }
+        let strLen = str.length,
+          patternLen = pattern.length
+        for (let i = 1; i <= patternLen; i++) {
+          if (pattern[patternLen - i] != str[strLen - i]) {
+            return false
+          }
+        }
+        return true
+      }
+
+      console.log(match("abc", "abc"))
+      console.log(match("abc", "abd"))
+      console.log(match("abc", "abcdef"))
+      console.log(match("ababc", "abababc"))
+</body>
+</html>
