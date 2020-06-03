@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TITLE</title>
+    <meta
+      name="apple-mobile-web-app-title"
+      content="移动彩云，让工作沟通变得更便捷。"
+    />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1,maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="screen-orientation" content="portrait" />
+    <meta name="x5-orientation" content="portrait" />
+  </head>
+  <body>
+    <div id="abc" class="abc" attr="33" dd></div>
+    <div id="abd" class="abc d" attr dd></div>
+    <p id="pp"></p>
+    <p id="app"></p>
+
+    <div
+      id="abe"
+      class="abc d"
+      attr="a b c"
+      lang="zh-cn"
+      sa="startName"
+      ea="nameend"
+      ina="abcattrbca"
+      dd
+    ></div>
+    <script>
+      function isAttrMatch(selector, el) {
+        let arr = selector.split("="),
+          key = arr[0],
+          value = arr[1],
+          attributes = el.getAttributeNames(),
+          matchValue
+        if (value) {
+          matchValue = value.slice(1, value.length - 1)
+        }
+
+        if (["~", "|", "^", "$", "*"].includes(key[key.length - 1])) {
+          let realKey = key.slice(0, key.length - 1),
+            elValue = el.getAttribute(realKey),
+            hasAttribute = attributes.includes(realKey)
+          if (!hasAttribute) return false
+
+          if (!matchValue) throw new Error("错误的属性选择器", selector)
+          let isMatch
+          switch (key[key.length - 1]) {
+            case "~":
+              let arr = elValue.split(" ")
+              isMatch = arr.includes(matchValue)
+              break
+            case "|":
+              isMatch =
+                matchValue === elValue || elValue.startsWith(`${matchValue}-`)
+              break
+            case "^":
+              isMatch = elValue.startsWith(matchValue)
+              break
+            case "$":
+              isMatch = elValue.endsWith(matchValue)
+              break
+            case "*":
+              isMatch = elValue.includes(matchValue)
+              break
+            default:
+              break
+          }
+          return isMatch
+        } else {
+          let hasAttribute = attributes.includes(key),
+            elValue = el.getAttribute(key)
+
+          if (!hasAttribute) return false
+          if (value) {
+            if (elValue != matchValue) return false
+          }
+        }
+
+        return true
+      }
+
+      function isCompositeSelectorMatch(selector, el) {
+        let selectorArr = [],
+          regex = /[a-zA-Z]+|#\w+|\.\w+|\[.+?\]|\*|:first-child|:first-of-type|:not\(([a-zA-Z]+|#\w+|\.\w+|\[.+?\]|\*|:first-child|:first-of-type)+\)/g,
+          result = regex.exec(selector)
+        while (result) {
+          selectorArr.push(result[0])
+          result = regex.exec(selector)
+        }
+        for (let selector of selectorArr) {
+          if (selector === "*") continue
+          else if (selector[0] === "#") {
+            if (el.id != selector.slice(1)) return false
+          } else if (selector[0] === ".") {
+            if (!el.classList.contains(selector.slice(1))) return false
+          } else if (selector[0] === "[") {
+            let s = selector.slice(1, selector.length - 1),
+              isMatch = isAttrMatch(s, el)
+            if (!isMatch) return false
+          } else if (selector === ":first-child") {
+            if (el.previousElementSibling) return false
+          } else if (selector === ":first-of-type") {
+            let tagName = el.tagName,
+              preEl = el.previousElementSibling
+            while (preEl) {
+              if (preEl.tagName == el.tagName) return false
+              preEl = preEl.previousElementSibling
+            }
+          } else if (selector.startsWith(":not")) {
+            let selectorPart = selector.slice(5, selector.length - 1),
+              isMatch = isCompositeSelectorMatch(selectorPart, el)
+            if (isMatch) return false
+          } else {
+            if (el.tagName.toLowerCase() != selector.toLowerCase()) return false
+          }
+        }
+        return true
+      }
+
+      function match(selector, el) {
+        let regex = /^([a-zA-Z]+|#\w+|\.\w+|\[.+?\]|\*|:first-child|:first-of-type|:not\(([a-zA-Z]+|#\w+|\.\w+|\[.+?\]|\*|:first-child|:first-of-type)+\))+$/
+        let selectors = selector
+          .split(" ")
+          .map(it => it.trim())
+          .filter(Boolean)
+        selectors.reverse()
+
+        let checkEl = el
+
+        for (let item of selectors) {
+          let match = regex.exec(item)
+          if (!match) {
+            throw new Error(`不识别的选择器${item}`)
+          }
+        }
+
+        let firstSelector = selectors[0],
+          isMatch = isCompositeSelectorMatch(firstSelector, checkEl)
+        if (!isMatch) return false
+
+        for (let i = 1; i < selectors.length; i++) {
+          checkEl = checkEl.parentElement
+          let checkSelector = selectors[i],
+            isMatch = isCompositeSelectorMatch(checkSelector, checkEl)
+          while (!isMatch) {
+            if (!checkEl) return false
+            isMatch = isCompositeSelectorMatch(checkSelector, checkEl)
+            checkEl = checkEl.parentElement
+          }
+        }
+        return true
+      }
+      console.log(
+        match('div.abc#abc[attr="33"]*', document.querySelector("#abc"))
+      )
+      console.log(
+        match("div.abc.d#abd[attr][dd]*", document.querySelector("#abd"))
+      )
+      console.log(
+        match(
+          "div.abc.d#abe[attr~='a'][dd][lang|='zh'][sa^='start'][ea$='end'][ina*='attr']*",
+          document.querySelector("#abe")
+        )
+      )
+      console.log(
+        match(
+          'div.abc#abc[attr="33"]:first-child',
+          document.querySelector("#abc")
+        )
+      )
+      console.log(match(":first-of-type#pp", document.querySelector("#pp")))
+      console.log(
+        match(":first-of-type:not(#pp)", document.querySelector("#pp"))
+      )
+      console.log(match(":not(#pp)", document.querySelector("#app")))
+      console.log(
+        match(
+          "div.abc.d#abd[attr][dd]:first-child",
+          document.querySelector("#abd")
+        )
+      )
+      console.log(
+        match("div.abc#d##abd[attr][dd]*", document.querySelector("#abd"))
+      )
+    </script>
+  </body>
+</html>
