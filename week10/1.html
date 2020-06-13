@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            .box {
+                width: 300px;
+                height: 300px;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .item {
+                position: relative;
+                box-sizing: border-box;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+                border: 1px solid #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: red;
+            }
+        </style>
+        <div id="box" class="box"></div>
+
+        <script>
+            let arr = [
+                    [1, 0, 0],
+                    [0, 2, 0],
+                    [0, 0, 0],
+                ],
+                box = document.getElementById('box')
+            for (let item of arr) {
+                for (let it of item) {
+                    let el = document.createElement('div')
+                    el.className = 'item'
+                    if (it == 1) {
+                        el.textContent = 'X'
+                    } else if (it == 2) {
+                        el.textContent = 'O'
+                    }
+                    box.appendChild(el)
+                }
+            }
+        </script>
+    </body>
+</html>
