@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            .box {
+                width: 300px;
+                height: 300px;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .cell {
+                position: relative;
+                box-sizing: border-box;
+                width: 100px;
+                height: 100px;
+                background-color: green;
+                border: 1px solid #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: red;
+                font-size: 50px;
+            }
+        </style>
+        <div id="box" class="box"></div>
+
+        <script>
+            let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                box = document.getElementById('box'),
+                isX = true
+            for (let item of arr) {
+                let cell = document.createElement('div')
+                cell.className = 'cell'
+                cell.textContent = item == 1 ? 'X' : item == 2 ? 'O' : ''
+                box.appendChild(cell)
+            }
+            box.addEventListener('click', (e) => {
+                let children = box.children,
+                    el = e.target,
+                    index = [...children].findIndex((it) => it == el)
+                if (arr[index]) return
+                children[index].textContent = isX ? 'X' : 'O'
+                arr[index] = isX ? 1 : 2
+                let isWin = checkIsWin(index, arr)
+                if (isWin) {
+                    alert(`${isX ? 'X' : 'O'} win`)
+                    return
+                }
+                isX = !isX
+                computerMove()
+                // willWin(arr, isX)
+            })
+
+            function computerMove() {
+                let { point } = bestChoice(arr, isX)
+                let children = box.children
+                children[point].textContent = isX ? 'X' : 'O'
+                arr[point] = isX ? 1 : 2
+                let isWin = checkIsWin(point, arr)
+                if (isWin) {
+                    alert(`${isX ? 'X' : 'O'} win`)
+                    return
+                }
+                isX = !isX
+            }
+
+            function checkIsWin(index, arr) {
+                let rowIndex = parseInt(index / 3),
+                    content = arr[index],
+                    isRowMatch = true
+                for (let i = 0; i < 3; i++) {
+                    if (arr[rowIndex * 3 + i] != content) {
+                        isRowMatch = false
+                        break
+                    }
+                }
+                if (isRowMatch) return true
+
+                let colIndex = parseInt(index % 3),
+                    isColMatch = true
+
+                for (let i = 0; i < 3; i++) {
+                    if (arr[colIndex + 3 * i] != content) {
+                        isColMatch = false
+                        break
+                    }
+                }
+                if (isColMatch) return true
+
+                // 不是斜线上的点
+                if (colIndex != rowIndex && colIndex + rowIndex != 2) return
+
+                if (colIndex == rowIndex) {
+                    let isDownObliqueMatch = true
+                    for (let i = 0; i < 3; i++) {
+                        if (arr[i + 3 * i] != content) {
+                            isDownObliqueMatch = false
+                            break
+                        }
+                    }
+                    if (isDownObliqueMatch) return true
+                }
+
+                if (colIndex + rowIndex == 2) {
+                    let isUpObliqueMatch = true
+                    for (let i = 0; i < 3; i++) {
+                        if (arr[2 - i + 3 * i] != content) {
+                            isUpObliqueMatch = false
+                            break
+                        }
+                    }
+                    if (isUpObliqueMatch) return true
+                }
+
+                return false
+            }
+
+            function willWin(arr, isX) {
+                for (let i = 0; i < arr.length; i++) {
+                    if (arr[i]) continue
+                    let copyArr = JSON.parse(JSON.stringify(arr)),
+                        content = isX ? 1 : 2
+
+                    copyArr[i] = content
+                    if (checkIsWin(i, copyArr)) {
+                        // console.log(`${isX ? 'X' : 'O'} will win`)
+                        return i
+                    }
+                }
+            }
+
+            function bestChoice(arr, isX) {
+                let point = willWin(arr, isX)
+                if (point != undefined) {
+                    return {
+                        point,
+                        result: 1,
+                    }
+                }
+                let result = -1
+                for (let i = 0; i < 9; i++) {
+                    if (arr[i]) continue
+                    let copyArr = JSON.parse(JSON.stringify(arr))
+                    copyArr[i] = isX ? 1 : 2
+                    let opp = bestChoice(copyArr, !isX)
+                    if (-opp.result >= result) {
+                        point = i
+                        result = -opp.result
+                    }
+                    if (result == 1) {
+                        return {
+                            point,
+                            result,
+                        }
+                    }
+                }
+                return {
+                    point,
+                    result: point ? result : 0,
+                }
+            }
+        </script>
+    </body>
+</html>
