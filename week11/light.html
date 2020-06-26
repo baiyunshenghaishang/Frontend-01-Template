@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            .green,
+            .yellow,
+            .red {
+                display: inline-block;
+                width: 30px;
+                height: 30px;
+                margin: 20px;
+                border-radius: 50%;
+                background-color: gray;
+            }
+        </style>
+        <div class="green"></div>
+        <div class="yellow"></div>
+        <div class="green"></div>
+
+        <script>
+            let el = document.querySelector('.el')
+
+            function changeLight(color, ts) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        el.style.background = color
+                        resolve()
+                    }, ts)
+                })
+            }
+
+            async function run() {
+                while (true) {
+                    await changeLight('yellow', 10000)
+                    await changeLight('red', 2000)
+                    await changeLight('green', 5000)
+                }
+            }
+            run()
+        </script>
+    </body>
+</html>

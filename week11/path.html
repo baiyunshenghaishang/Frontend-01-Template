@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            .box {
+                display: flex;
+                flex-wrap: wrap;
+                width: 700px;
+                border: 1px solid gray;
+            }
+            .cell {
+                width: 6px;
+                height: 6px;
+                border-bottom: 1px solid #fff;
+                border-right: 1px solid #fff;
+                background-color: lightgray;
+            }
+        </style>
+        <div class="box"></div>
+        <button id="save">save</button>
+        <script>
+            // draw map
+            let flag = false,
+                clear = false
+            let box = document.querySelector('.box'),
+                data = new Array(10000).fill(0),
+                fromStartArr = new Array(10000).fill(Infinity),
+                storageData = localStorage.getItem('data')
+            if (storageData) {
+                data = JSON.parse(storageData)
+            }
+
+            for (let y = 0; y < 100; y++) {
+                for (let x = 0; x < 100; x++) {
+                    let cell = document.createElement('cell')
+                    cell.classList.add('cell')
+                    if (data[y * 100 + x]) {
+                        cell.style.background = 'gray'
+                    }
+                    cell.addEventListener('mousemove', (e) => {
+                        if (!flag) return
+                        if (clear) {
+                            cell.style.background = ''
+                            data[y * 100 + x] = 0
+                        } else {
+                            cell.style.background = 'gray'
+                            data[y * 100 + x] = 1
+                        }
+                    })
+                    box.appendChild(cell)
+                }
+            }
+            document.addEventListener('mousedown', (e) => {
+                flag = true
+                clear = e.button == 2
+            })
+            document.addEventListener('mouseup', () => {
+                flag = false
+            })
+            document.addEventListener('contextmenu', (e) => e.preventDefault())
+            document.querySelector('#save').addEventListener('click', () => {
+                localStorage.setItem('data', JSON.stringify(data))
+            })
+
+            // sorted
+            class Sorted {
+                constructor(data, compare) {
+                    this.data = data
+                    this.compare = compare
+                }
+
+                take() {
+                    if (!this.data.length) return
+                    let min = this.data[0],
+                        minIndex = 0
+                    for (let i = 1; i < this.data.length; i++) {
+                        if (this.compare(this.data[i], min) < 0) {
+                            min = this.data[i]
+                            minIndex = i
+                        }
+                    }
+                    this.data[minIndex] = this.data[this.data.length - 1]
+                    this.data.pop()
+                    return min
+                }
+                insert(val) {
+                    this.data.push(val)
+                }
+                get length() {
+                    return this.data.length
+                }
+            }
+
+            // binary heap
+            class BinaryHead {
+                constructor(data, compare) {
+                    this.data = data
+                    this.compare = compare
+                }
+                take() {
+                    let min = this.data[0]
+                    let i = 0
+                    // fix heap to normal state
+                    while (i < this.data.length) {
+                        let leftChildIndex = i * 2 + 1,
+                            rightChildIndex = i * 2 + 2
+                        if (leftChildIndex >= this.data.length) {
+                            break
+                        }
+                        if (rightChildIndex >= this.data.length) {
+                            this.data[i] = this.data[leftChildIndex]
+                            i = leftChildIndex
+                            break
+                        }
+                        if (this.compare(this.data[leftChildIndex], this.data[rightChildIndex]) < 0) {
+                            this.data[i] = this.data[leftChildIndex]
+                            i = leftChildIndex
+                        } else {
+                            this.data[i] = this.data[rightChildIndex]
+                            i = rightChildIndex
+                        }
+                    }
+                    if (i < this.data.length - 1) {
+                        this.insertAt(i, this.data.pop())
+                    } else {
+                        this.data.pop()
+                    }
+                    return min
+                }
+
+                insertAt(i, val) {
+                    let index = i,
+                        parentIndex = Math.floor((index - 1) / 2)
+                    this.data[i] = val
+                    // fix heap to normal state
+                    while (index > 0 && this.compare(this.data[index], this.data[parentIndex]) < 0) {
+                        this.data[index] = this.data[parentIndex]
+                        this.data[parentIndex] = val
+                        index = parentIndex
+                        parentIndex = Math.floor((index - 1) / 2)
+                    }
+                }
+
+                insert(val) {
+                    this.insertAt(this.data.length, val)
+                }
+
+                get length() {
+                    return this.data.length
+                }
+            }
+
+            // let heap = new BinaryHead([], (a, b) => a - b)
+            // heap.insert(3)
+            // heap.insert(4)
+            // heap.insert(1)
+            // heap.insert(9)
+            // heap.insert(5)
+            // heap.insert(6)
+            // heap.insert(0)
+
+            function sleep(ts) {
+                return new Promise((resolve) => {
+                    setTimeout(resolve, ts)
+                })
+            }
+
+            async function findPath(sourceMap, start, end) {
+                function distance(point) {
+                    return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2
+                }
+                fromStartArr[start[1] * 100 + start[0]] = 0
+                let fromStart = fromStartArr[start[1] * 100 + start[0]]
+
+                let collection = new BinaryHead([start], (a, b) => distance(a) - distance(b)),
+                    map = sourceMap.slice()
+                async function insert([x, y], pre, fromStart) {
+                    let arrIndex = y * 100 + x
+                    if (x < 0 || y < 0 || x >= 100 || y >= 100) return
+                    if (map[arrIndex] == 1) return
+                    if (x != pre[0] && y != pre[1]) {
+                        let crossPoint1 = [x, pre[1]],
+                            crossPoint2 = [pre[0], y]
+                        if (
+                            map[crossPoint1[1] * 100 + crossPoint1[0]] == 1 &&
+                            map[crossPoint1[1] * 100 + crossPoint1[0]] == 1
+                        ) {
+                            return
+                        }
+                    }
+                    if (fromStart >= fromStartArr[arrIndex]) return
+
+                    map[arrIndex] = pre
+                    fromStartArr[arrIndex] = fromStart
+                    box.children[arrIndex].style.backgroundColor = 'lightgreen'
+                    await sleep(1)
+                    collection.insert([x, y])
+                }
+                while (collection.length) {
+                    let [x, y] = collection.take()
+                    if (x == end[0] && y == end[1]) {
+                        let path = []
+                        while (x != start[0] || y != start[1]) {
+                            path.push(x, y)
+                            box.children[y * 100 + x].style.backgroundColor = 'pink'
+                            await sleep(1)
+                            ;[x, y] = map[y * 100 + x]
+                        }
+                        return path
+                    }
+
+                    await insert([x - 1, y], [x, y], fromStartArr[y * 100 + x] + 1)
+                    await insert([x + 1, y], [x, y], fromStartArr[y * 100 + x] + 1)
+                    await insert([x, y - 1], [x, y], fromStartArr[y * 100 + x] + 1)
+                    await insert([x, y + 1], [x, y], fromStartArr[y * 100 + x] + 1)
+
+                    await insert([x - 1, y - 1], [x, y], fromStartArr[y * 100 + x] + 1.4)
+                    await insert([x - 1, y + 1], [x, y], fromStartArr[y * 100 + x] + 1.4)
+                    await insert([x + 1, y - 1], [x, y], fromStartArr[y * 100 + x] + 1.4)
+                    await insert([x + 1, y + 1], [x, y], fromStartArr[y * 100 + x] + 1.4)
+                }
+                return null
+            }
+            // findPath(data, [0, 0], [50, 50])
+        </script>
+    </body>
+</html>

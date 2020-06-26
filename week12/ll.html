@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            let regexp = /([0-9.]+)|([ ]+)|([\r\n]+)|([*])|([/])|([+])|([-])/g
+            let dictionnary = ['Number', 'Whitespace', 'LineTerminator', '*', '/', '+', '-']
+            function* tokenlize(source) {
+                let result = null,
+                    lastIndex = 0
+
+                while (true) {
+                    let token = {
+                        type: '',
+                        value: '',
+                    }
+                    lastIndex = regexp.lastIndex
+                    result = regexp.exec(source)
+                    if (!result) break
+
+                    if (regexp.lastIndex - lastIndex > result[0].length)
+                        throw new Error(
+                            `unexpted token ${source.slice(lastIndex, regexp.lastIndex - result[0].length)}`
+                        )
+
+                    for (let i = 0; i < dictionnary.length; i++) {
+                        if (result[i + 1]) {
+                            token.type = dictionnary[i]
+                        }
+                    }
+                    token.value = result[0]
+                    yield token
+                }
+                yield { type: 'EOF' }
+            }
+
+            function Expression(source) {
+                if (source[0].type === 'AdditiveExpression' && source.length > 1 && source[1].type === 'EOF') {
+                    let node = {
+                        type: 'Expression',
+                        children: [source.shift()],
+                    }
+                    source.unshift(node)
+                    return node
+                }
+                AdditiveExpression(source)
+                return Expression(source)
+            }
+
+            function AdditiveExpression(source) {
+                if (source[0].type === 'Number') {
+                    MultiplicationExpression(source)
+                }
+                if (source[0].type === 'MultiplicationExpression') {
+                    let node = {
+                        type: 'AdditiveExpression',
+                        children: [source.shift()],
+                    }
+                    source.unshift(node)
+                    return AdditiveExpression(source)
+                }
+                if (source[0].type === 'AdditiveExpression' && source.length > 1 && source[1].type === '+') {
+                    let node = {
+                        type: 'AdditiveExpression',
+                        children: [source.shift(), source.shift()],
+                    }
+                    MultiplicationExpression(source)
+                    node.children.push(source.shift())
+                    source.unshift(node)
+                    return AdditiveExpression(source)
+                }
+                if (source[0].type === 'AdditiveExpression' && source.length > 1 && source[1].type === '-') {
+                    let node = {
+                        type: 'AdditiveExpression',
+                        children: [source.shift(), source.shift()],
+                    }
+                    MultiplicationExpression(source)
+                    node.children.push(source.shift())
+                    source.unshift(node)
+                    return AdditiveExpression(source)
+                }
+                if (source[0].type === 'AdditiveExpression') {
+                    return source[0]
+                }
+                throw new Error('unexpected expression')
+            }
+
+            function MultiplicationExpression(source) {
+                if (source[0].type === 'Number') {
+                    let node = {
+                        type: 'MultiplicationExpression',
+                        children: source.shift(),
+                    }
+                    source.unshift(node)
+                    return MultiplicationExpression(source)
+                }
+                if (source[0].type === 'MultiplicationExpression' && source.length > 1 && source[1].type === '*') {
+                    let node = {
+                        type: 'MultiplicationExpression',
+                        children: [source.shift(), source.shift(), source.shift()],
+                    }
+                    source.unshift(node)
+                    return MultiplicationExpression(source)
+                }
+                if (source[0].type === 'MultiplicationExpression' && source.length > 1 && source[1].type === '/') {
+                    let node = {
+                        type: 'MultiplicationExpression',
+                        children: [source.shift(), source.shift(), source.shift()],
+                    }
+                    source.unshift(node)
+                    return MultiplicationExpression(source)
+                }
+                if (source[0].type === 'MultiplicationExpression') return source[0]
+                throw new Error('unexpected expression')
+            }
+
+            let source = []
+            for (let token of tokenlize('1024 * 3 +2  - 3 * 8')) {
+                if (token.type == 'Whitespace' || token.type == 'LineTerminator') continue
+                source.push(token)
+            }
+            console.log(Expression(source))
+        </script>
+    </body>
+</html>
