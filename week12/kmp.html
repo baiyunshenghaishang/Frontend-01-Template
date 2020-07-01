@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            // 1. 计算pattern中每个位置不匹配时应该回退到哪个位置的数组(或者不应该叫数组？)
+            // -- 似乎很简单，不太好写
+            function getPatternTable(pattern) {
+                let i = 0,
+                    result = new Array(pattern.length).fill(0)
+                for (let j = 1; j < pattern.length; j++) {
+                    if (pattern[i] == pattern[j]) {
+                        i++
+                    } else {
+                        i = 0
+                    }
+                    result[j] = i
+                }
+                return result
+            }
+            function find(source, pattern) {
+                let table = getPatternTable(pattern)
+                let j = 0
+                // 2. 遍历匹配
+                for (let i = 0; i < source.length; i++) {
+                    // 1. 从字符串的起始位置和pattern的起始位置开始匹配
+                    console.log(source[i], pattern[j], j)
+                    if (source[i] === pattern[j]) {
+                        // 2. 如果匹配到了，则pattern位置+1，继续匹配
+                        j++
+                    } else {
+                        // 3. 如果匹配失败，且pattern的匹配位置>1
+                        // 4. 字符串的匹配位置-1，pattern的匹配位置回退到第一部分中算出来的数组的位置
+                        if (j > 0) {
+                            j = table[j - 1]
+                            i--
+                        }
+                        // 否则，字符串位置+1，继续匹配
+                    }
+                    // 如果pattern匹配完了，return true
+                    if (j == pattern.length) return true
+                }
+                return false
+            }
+            console.log(find('aaaaaaaax', 'aaax'))
+        </script>
+    </body>
+</html>

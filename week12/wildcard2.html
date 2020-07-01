@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            function kmp(source, pattern, fromIndex) {
+                const getBackIndex = (pattern) => {
+                    let j = 0
+                    for (let i = 1; i < pattern.length; i++) {
+                        if (pattern[i] === pattern[j]) {
+                            j++
+                        } else {
+                            j = 0
+                        }
+                    }
+                    return j
+                }
+
+                let j = 0
+                for (let i = fromIndex; i < source.length; i++) {
+                    if (source[i] === pattern[j] || pattern[j] === '?') {
+                        j++
+                    } else {
+                        if (j > 0) {
+                            let str = source.slice(i - j, i)
+                            i--
+                            j = getBackIndex(str)
+                        }
+                    }
+                    if (j === pattern.length) return i + 1 - j
+                }
+                return false
+            }
+
+            function find(source, pattern) {
+                // 1. 计算pattern有多少\*
+                let starCount = 0
+                for (let i = 0; i < pattern.length; i++) {
+                    if (pattern[i] == '*') starCount++
+                }
+
+                // 2. 如果没有\*，变成直接匹配
+                if (starCount === 0) {
+                    if (source.length != pattern.length) return false
+                    for (let i = 0; i < source.length; i++) {
+                        if (source[i] != pattern[i] && pattern[i] != '?') {
+                            return false
+                        }
+                    }
+                    return true
+                }
+
+                // 3. 如果有\*
+
+                let i = 0
+
+                // 4. 匹配第一个\*之前的部分，如果不匹配，返回 false
+                for (; pattern[i] != '*'; i++) {
+                    if (source[i] != pattern[i] && pattern[i] != '?') {
+                        return false
+                    }
+                }
+
+                // 5. 对最后一个\*之前的部分进行匹配
+                let lastIndex = i
+                for (let j = 0; j < starCount - 1; j++) {
+                    // 6. 对每个\*的后面部分进行一次匹配，此处使用正则匹配，因为后面部分可能包含?
+                    i++
+                    let subPattern = ''
+                    while (pattern[i] != '*') {
+                        subPattern += pattern[i]
+                        i++
+                    }
+                    // 7. 将?替换成[\s\S]匹配，如果匹配不到，返回 false
+                    // 匹配到了，修改lastIndex,下次从lastIndex之后开始匹配
+                    // let regex = new RegExp(subPattern.replace(/[?]/g, "[\\s\\S]"), "g")
+                    // regex.lastIndex = lastIndex
+                    // let match = regex.exec(source)
+                    // // console.log(match)
+                    // if (!match) return false
+                    // lastIndex = regex.lastIndex
+                    let match = kmp(source, subPattern, lastIndex)
+                    if (match === false) return false
+                    lastIndex = match
+                }
+
+                // 8. 对最后一个\*之后的部分匹配，如果不匹配，返回 false
+                for (let j = 1; pattern[pattern.length - j] != '*'; j++) {
+                    if (
+                        source[source.length - j] != pattern[pattern.length - j] &&
+                        pattern[pattern.length - j] != '?'
+                    ) {
+                        return false
+                    }
+                }
+                // 9. 返回 true
+                return true
+            }
+            console.log(find('abccc', 'abc?') === false)
+            console.log(find('abcc', 'abc?') === true)
+            console.log(find('abacacedabc', 'a*c') === true)
+            console.log(find('abacacedabc', 'a*?') === true)
+
+            console.log(find('abcabcabbbbbx', 'a*c*c*bx') === true)
+            console.log(find('abcabcabbbbbx', 'a*?c*?c*?x') === true)
+            console.log(find('abccdd', 'a*?b*?c*dd') === false)
+        </script>
+    </body>
+</html>

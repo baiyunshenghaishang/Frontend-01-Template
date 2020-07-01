@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            function kmp(source, pattern) {
+                const getBackIndex = (pattern) => {
+                    let j = 0
+                    for (let i = 1; i < pattern.length; i++) {
+                        if (pattern[i] === pattern[j]) {
+                            j++
+                        } else {
+                            j = 0
+                        }
+                    }
+                    return j
+                }
+
+                let j = 0
+                for (let i = 0; i < source.length; i++) {
+                    if (source[i] === pattern[j] || pattern[j] === '?') {
+                        j++
+                    } else {
+                        if (j > 0) {
+                            let str = source.slice(i - j, i)
+                            i--
+                            j = getBackIndex(str)
+                        }
+                    }
+                    if (j === pattern.length) return i + 1 - j
+                }
+                return false
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            function tokenlize(source) {
+                const dictionary = ['Number', 'Whitespace', 'LineTerminator', '+', '-', '*', '/']
+                let regex = /([0-9.]+)|([ ]+)|([\r\n]+)|([+])|([-])|([*])|([\/])/g
+                let tokens = [],
+                    match = null
+                while ((match = regex.exec(source))) {
+                    for (let i = 0; i < dictionary.length; i++) {
+                        if (match[i + 1]) {
+                            tokens.push({
+                                type: dictionary[i],
+                                value: match[i + 1],
+                            })
+                            break
+                        }
+                    }
+                }
+            }
+
+            // AddtiveExpression = MultipleExpression |
+            //                     AddtiveExpression - Number |
+            //                     AddtiveExpression + Number
+            function AddtiveExpression(tokens){
+                // 从token第一个开始，把能组合成一个 AddtiveExpression 的token全都组合成一个 AddtiveExpression,
+                // 最后头部只有一个 AddtiveExpression
+                
+            }
+
+            // MultipleExpression = Number |
+            //                      MultipleExpression * Number |
+            //                      MultipleExpression / Number
+            function MultipleExpression(tokens) {
+                // 从token第一个开始，把能组合成一个MultipleExpression的token全都组合成一个MultipleExpression,
+                // 最后头部只有一个MutilpleExpression
+                if (tokens[0].type === 'Number') {
+                    let node = {
+                        type: 'MultipleExpression',
+                        children: [tokens.shift()],
+                    }
+                    tokens.unshift(node)
+                    return MultipleExpression(tokens)
+                }
+                if (tokens[0].type === 'MultipleExpression' && tokens.length > 1 && tokens[1].type == '*') {
+                    let node = {
+                        type: 'MultipleExpression',
+                        chilren: [tokens.shift(), tokens.shift(), tokens.shift()],
+                    }
+                    tokens.unshift(node)
+                    return MultipleExpression(tokens)
+                }
+                if (tokens[0].type === 'MultipleExpression' && tokens.length > 1 && tokens[1].type == '/') {
+                    let node = {
+                        type: 'MultipleExpression',
+                        chilren: [tokens.shift(), tokens.shift(), tokens.shift()],
+                    }
+                    tokens.unshift(node)
+                    return MultipleExpression(tokens)
+                }
+                if (tokens[0].type === 'MultipleExpression') {
+                    return tokens[0]
+                }
+                throw Error('unexpected token')
+            }
+
+            let source = []
+            for (let token of tokenlize('1024 * 3 +2  - 3 * 8')) {
+                if (token.type != 'Whitespace' && token.type != 'LineTerminator') source.push(token)
+            }
+            MultipleExpression(source)
+        </script>
+    </body>
+</html>
