@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <style>
+            #drag {
+                width: 100px;
+                height: 100px;
+                background-color: lightgray;
+                display: inline-block;
+            }
+        </style>
+        <div id="container">
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+            文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文
+        </div>
+        <div id="drag"></div>
+        <script>
+            let el = document.querySelector('#container'),
+                drag = document.querySelector('#drag')
+            let FLAG = false
+
+            drag.addEventListener('mousedown', (e) => {
+                FLAG = true
+            })
+            document.addEventListener('mousemove', (e) => {
+                if (!FLAG) return
+                let x = e.clientX,
+                    y = e.clientY,
+                    range = nearest(x, y)
+                range.insertNode(drag)
+            })
+            document.addEventListener('mouseup', () => {
+                FLAG = false
+            })
+
+            let ranges = []
+            for (let i = 0; i < el.childNodes[0].textContent.length; i++) {
+                let range = document.createRange()
+                range.setStart(el.childNodes[0], i)
+                range.setEnd(el.childNodes[0], i + 1)
+                ranges.push(range)
+            }
+            function nearest(x0, y0) {
+                let nearestRange = null,
+                    distance = Infinity
+                for (let range of ranges) {
+                    let { x, y } = range.getBoundingClientRect(),
+                        d = (x - x0) ** 2 + (y - y0) ** 2
+                    if (d < distance) {
+                        distance = d
+                        nearestRange = range
+                    }
+                }
+                return nearestRange
+            }
+            document.addEventListener('selectstart', (e) => {
+                e.preventDefault()
+            })
+        </script>
+    </body>
+</html>
