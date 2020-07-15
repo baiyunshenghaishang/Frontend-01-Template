@@ -12,5 +12,3 @@
 ## 作业
 
 https://github.com/baiyunshenghaishang/component-design
-
-还有一点没做完，周四周五应该会补一下
